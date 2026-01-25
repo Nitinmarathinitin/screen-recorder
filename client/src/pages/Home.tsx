@@ -37,6 +37,8 @@ export default function Home() {
     setHasWebcam,
     quality,
     setQuality,
+    fps,
+    setFps,
   } = useMediaRecorder();
 
   const { toast } = useToast();
@@ -128,7 +130,7 @@ export default function Home() {
             </h1>
 
             <div className="flex flex-col gap-4 mb-8 p-6 bg-white/5 rounded-2xl border border-white/10">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch 
                     id="webcam-mode" 
@@ -140,18 +142,33 @@ export default function Home() {
                   </Label>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Settings className="size-4 text-muted-foreground" />
-                  <Select value={quality} onValueChange={setQuality}>
-                    <SelectTrigger className="w-[120px] h-8 bg-transparent border-white/10">
-                      <SelectValue placeholder="Quality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="720p">720p (HD)</SelectItem>
-                      <SelectItem value="1080p">1080p (FHD)</SelectItem>
-                      <SelectItem value="4k">4K (UHD)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Settings className="size-4 text-muted-foreground" />
+                    <Select value={quality} onValueChange={setQuality}>
+                      <SelectTrigger className="w-[110px] h-8 bg-transparent border-white/10">
+                        <SelectValue placeholder="Quality" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="720p">720p</SelectItem>
+                        <SelectItem value="1080p">1080p</SelectItem>
+                        <SelectItem value="4k">4K</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select value={fps.toString()} onValueChange={(v) => setFps(parseInt(v))}>
+                      <SelectTrigger className="w-[85px] h-8 bg-transparent border-white/10">
+                        <SelectValue placeholder="FPS" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="24">24 FPS</SelectItem>
+                        <SelectItem value="30">30 FPS</SelectItem>
+                        <SelectItem value="60">60 FPS</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>

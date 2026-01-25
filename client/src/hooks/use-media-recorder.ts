@@ -19,12 +19,15 @@ interface UseMediaRecorderReturn {
   webcamStream: MediaStream | null;
   quality: string;
   setQuality: (val: string) => void;
+  fps: number;
+  setFps: (val: number) => void;
 }
 
 export function useMediaRecorder(): UseMediaRecorderReturn {
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [hasWebcam, setHasWebcam] = useState(false);
   const [quality, setQuality] = useState("1080p");
+  const [fps, setFps] = useState(30);
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [mediaBlobUrl, setMediaBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +68,8 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
       
       const constraints: DisplayMediaStreamOptions = {
         video: { 
-          displaySurface: "monitor", 
+          displaySurface: "monitor",
+          frameRate: { ideal: fps },
         },
         audio: true,
       };
@@ -180,6 +184,9 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
     mediaBlobUrl,
     previewStream,
     error,
-    duration,
+    quality,
+    setQuality,
+    fps,
+    setFps,
   };
 }
