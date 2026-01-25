@@ -3,23 +3,13 @@ import { useMediaRecorder } from "@/hooks/use-media-recorder";
 import { useUploadRecording } from "@/hooks/use-recordings";
 import { useToast } from "@/hooks/use-toast";
 import { Timer } from "@/components/Timer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { AudioVisualizer } from "@/components/recorder/AudioVisualizer";
 import { WebcamPreview } from "@/components/recorder/WebcamPreview";
-import { Loader2, Mic, Monitor, StopCircle, RefreshCw, Save, X, Camera, Settings } from "lucide-react";
+import { SettingsDialog } from "@/components/recorder/SettingsDialog";
+import { Loader2, Monitor, StopCircle, RefreshCw, Save } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
   const {
@@ -108,6 +98,18 @@ export default function Home() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] mix-blend-screen" />
       </div>
 
+      {/* Persistent Settings Button - Bottom Right */}
+      <div className="fixed bottom-6 right-6 z-[100]">
+        <SettingsDialog
+          hasWebcam={hasWebcam}
+          setHasWebcam={setHasWebcam}
+          quality={quality}
+          setQuality={setQuality}
+          fps={fps}
+          setFps={setFps}
+        />
+      </div>
+
       <AnimatePresence mode="wait">
         {/* IDLE STATE */}
         {status === "idle" && (
@@ -129,53 +131,15 @@ export default function Home() {
               Start Recording
             </h1>
 
-            <div className="flex flex-col gap-4 mb-8 p-6 bg-white/5 rounded-2xl border border-white/10">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="webcam-mode" 
-                    checked={hasWebcam} 
-                    onCheckedChange={setHasWebcam} 
-                  />
-                  <Label htmlFor="webcam-mode" className="flex items-center gap-2 cursor-pointer">
-                    <Camera className="size-4" /> Webcam Overlay
-                  </Label>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <Settings className="size-4 text-muted-foreground" />
-                    <Select value={quality} onValueChange={setQuality}>
-                      <SelectTrigger className="w-[110px] h-8 bg-transparent border-white/10">
-                        <SelectValue placeholder="Quality" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="720p">720p</SelectItem>
-                        <SelectItem value="1080p">1080p</SelectItem>
-                        <SelectItem value="4k">4K</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Select value={fps.toString()} onValueChange={(v) => setFps(parseInt(v))}>
-                      <SelectTrigger className="w-[85px] h-8 bg-transparent border-white/10">
-                        <SelectValue placeholder="FPS" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="24">24 FPS</SelectItem>
-                        <SelectItem value="30">30 FPS</SelectItem>
-                        <SelectItem value="60">60 FPS</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-lg text-muted-foreground mb-12 leading-relaxed">
+              Configure your capture settings in the bottom right <br/>
+              and hit record to begin.
+            </p>
 
             <button
               onClick={startRecording}
               className="btn-primary text-lg px-8 py-4 rounded-2xl group relative overflow-hidden"
+              data-testid="button-start-recording"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               <div className="flex items-center gap-3">
@@ -234,6 +198,7 @@ export default function Home() {
               <button
                 onClick={stopRecording}
                 className="btn-danger text-lg px-8 min-w-[200px]"
+                data-testid="button-stop-recording"
               >
                 <StopCircle className="mr-2 size-5" />
                 Stop Recording <span className="text-xs opacity-70 ml-2">(Press S)</span>
@@ -271,6 +236,7 @@ export default function Home() {
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder={`Recording - ${new Date().toLocaleDateString()}`}
                       className="bg-black/20 border-white/10 h-12 text-lg focus:border-primary/50 transition-colors"
+                      data-testid="input-recording-title"
                     />
                   </div>
                   
@@ -291,6 +257,7 @@ export default function Home() {
                     onClick={handleSave}
                     disabled={isUploading}
                     className="btn-primary w-full"
+                    data-testid="button-save-recording"
                   >
                     {isUploading ? (
                       <>
@@ -309,6 +276,7 @@ export default function Home() {
                     onClick={resetRecording}
                     disabled={isUploading}
                     className="btn-secondary w-full bg-transparent hover:bg-white/5 text-muted-foreground hover:text-white"
+                    data-testid="button-discard-recording"
                   >
                     <RefreshCw className="mr-2 size-4" />
                     Discard & New
