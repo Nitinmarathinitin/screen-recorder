@@ -54,6 +54,8 @@ export async function registerRoutes(
         mimeType: req.file.mimetype,
         size: req.file.size,
         duration: req.body.duration ? parseInt(req.body.duration) : null,
+        quality: req.body.quality || "1080p",
+        hasWebcam: req.body.hasWebcam === "true" ? 1 : 0,
       });
 
       res.status(201).json(recording);

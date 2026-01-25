@@ -10,6 +10,8 @@ export const recordings = pgTable("recordings", {
   mimeType: text("mime_type").notNull(),
   size: integer("size").notNull(),
   duration: integer("duration"), // in seconds
+  quality: text("quality").default("1080p"),
+  hasWebcam: integer("has_webcam").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

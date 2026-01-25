@@ -42,11 +42,19 @@ export function useUploadRecording() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ file, title, duration }: { file: Blob; title: string; duration: number }) => {
+    mutationFn: async ({ file, title, duration, quality, hasWebcam }: { 
+      file: Blob; 
+      title: string; 
+      duration: number;
+      quality?: string;
+      hasWebcam?: boolean;
+    }) => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("title", title);
       formData.append("duration", duration.toString());
+      if (quality) formData.append("quality", quality);
+      if (hasWebcam !== undefined) formData.append("hasWebcam", hasWebcam.toString());
 
       const res = await fetch(api.recordings.upload.path, {
         method: api.recordings.upload.method,

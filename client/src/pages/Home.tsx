@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMediaRecorder } from "@/hooks/use-media-recorder";
 import { useUploadRecording } from "@/hooks/use-recordings";
 import { useToast } from "@/hooks/use-toast";
@@ -6,7 +6,11 @@ import { Timer } from "@/components/Timer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Loader2, Mic, Monitor, StopCircle, RefreshCw, Save, X, LayoutTemplate } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { AudioVisualizer } from "@/components/recorder/AudioVisualizer";
+import { WebcamPreview } from "@/components/recorder/WebcamPreview";
+import { Loader2, Mic, Monitor, StopCircle, RefreshCw, Save, X, Camera } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 
@@ -19,8 +23,11 @@ export default function Home() {
     mediaBlobUrl,
     mediaBlob,
     previewStream,
+    webcamStream,
     error,
     duration,
+    hasWebcam,
+    setHasWebcam,
   } = useMediaRecorder();
 
   const { toast } = useToast();
@@ -29,6 +36,21 @@ export default function Home() {
   
   const [title, setTitle] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+
+  // Keyboard Shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      if (e.key.toLowerCase() === 'r' && status === 'idle') {
+        startRecording();
+      } else if (e.key.toLowerCase() === 's' && status === 'recording') {
+        stopRecording();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [status, startRecording, stopRecording]);
 
   // Live preview effect
   const handlePreviewRef = (video: HTMLVideoElement | null) => {
@@ -48,6 +70,7 @@ export default function Home() {
         file: mediaBlob,
         title: finalTitle,
         duration: duration,
+        hasWebcam: hasWebcam,
       });
       
       toast({
@@ -93,10 +116,19 @@ export default function Home() {
             <h1 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60">
               Start Recording
             </h1>
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Capture your screen, window, or specific tab in high quality. <br/>
-              No watermarks, no time limits.
-            </p>
+
+            <div className="flex items-center justify-center gap-8 mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
+              <div className="flex items-center space-x-2">
+                <Switch 
+                  id="webcam-mode" 
+                  checked={hasWebcam} 
+                  onCheckedChange={setHasWebcam} 
+                />
+                <Label htmlFor="webcam-mode" className="flex items-center gap-2 cursor-pointer">
+                  <Camera className="size-4" /> Webcam Overlay
+                </Label>
+              </div>
+            </div>
 
             <button
               onClick={startRecording}
@@ -105,7 +137,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
               <div className="flex items-center gap-3">
                 <div className="size-3 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
-                Start Recording
+                Start Recording <span className="text-xs opacity-50 ml-2">(Press R)</span>
               </div>
             </button>
             
@@ -139,14 +171,19 @@ export default function Home() {
                 className="w-full h-full object-contain"
               />
               
-              <div className="absolute top-4 left-4 flex gap-2">
-                <div className="px-3 py-1.5 rounded-full bg-red-500/90 backdrop-blur text-white text-sm font-medium flex items-center gap-2 shadow-lg animate-pulse">
-                  <div className="size-2 bg-white rounded-full" />
-                  REC
+              <WebcamPreview stream={webcamStream} />
+              
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <div className="px-3 py-1.5 rounded-full bg-red-500/90 backdrop-blur text-white text-sm font-medium flex items-center gap-2 shadow-lg animate-pulse">
+                    <div className="size-2 bg-white rounded-full" />
+                    REC
+                  </div>
+                  <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur border border-white/10 text-white text-sm font-mono">
+                    <Timer seconds={duration} />
+                  </div>
                 </div>
-                <div className="px-3 py-1.5 rounded-full bg-black/50 backdrop-blur border border-white/10 text-white text-sm font-mono">
-                  <Timer seconds={duration} />
-                </div>
+                <AudioVisualizer stream={previewStream} isRecording={true} />
               </div>
             </div>
 
@@ -156,13 +193,9 @@ export default function Home() {
                 className="btn-danger text-lg px-8 min-w-[200px]"
               >
                 <StopCircle className="mr-2 size-5" />
-                Stop Recording
+                Stop Recording <span className="text-xs opacity-70 ml-2">(Press S)</span>
               </button>
             </div>
-            
-            <p className="mt-4 text-muted-foreground text-sm">
-              Click stop or use the browser controls to finish.
-            </p>
           </motion.div>
         )}
 

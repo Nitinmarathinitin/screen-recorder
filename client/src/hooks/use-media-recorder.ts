@@ -14,14 +14,19 @@ interface UseMediaRecorderReturn {
   previewStream: MediaStream | null;
   error: string | null;
   duration: number;
+  hasWebcam: boolean;
+  setHasWebcam: (val: boolean) => void;
+  webcamStream: MediaStream | null;
 }
 
 export function useMediaRecorder(): UseMediaRecorderReturn {
   const [status, setStatus] = useState<RecorderStatus>("idle");
+  const [hasWebcam, setHasWebcam] = useState(false);
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [mediaBlobUrl, setMediaBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewStream, setPreviewStream] = useState<MediaStream | null>(null);
+  const [webcamStream, setWebcamStream] = useState<MediaStream | null>(null);
   const [duration, setDuration] = useState(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -30,11 +35,12 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
 
   useEffect(() => {
     return () => {
-      // Cleanup URLs on unmount
+      // Cleanup
       if (mediaBlobUrl) URL.revokeObjectURL(mediaBlobUrl);
       if (timerRef.current) window.clearInterval(timerRef.current);
+      if (webcamStream) webcamStream.getTracks().forEach(t => t.stop());
     };
-  }, [mediaBlobUrl]);
+  }, [mediaBlobUrl, webcamStream]);
 
   const startTimer = () => {
     setDuration(0);
@@ -53,22 +59,30 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          displaySurface: "monitor",
-          frameRate: { ideal: 30 }
-        },
-        audio: true, // System audio if user selects "share audio"
+      
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: "monitor", frameRate: { ideal: 30 } },
+        audio: true,
       });
 
-      setPreviewStream(stream);
+      let finalStream = screenStream;
 
-      // Handle user clicking "Stop Sharing" in browser UI
-      stream.getVideoTracks()[0].onended = () => {
+      if (hasWebcam) {
+        try {
+          const camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+          setWebcamStream(camStream);
+        } catch (e) {
+          console.error("Failed to get webcam:", e);
+        }
+      }
+
+      setPreviewStream(screenStream);
+
+      screenStream.getVideoTracks()[0].onended = () => {
         stopRecording();
       };
 
-      const recorder = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8,opus" });
+      const recorder = new MediaRecorder(screenStream, { mimeType: "video/webm;codecs=vp8,opus" });
       mediaRecorderRef.current = recorder;
       chunksRef.current = [];
 
@@ -86,12 +100,13 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
         setStatus("preview");
         stopTimer();
         
-        // Stop all tracks to release camera/screen
-        stream.getTracks().forEach((track) => track.stop());
+        screenStream.getTracks().forEach((track) => track.stop());
+        if (webcamStream) webcamStream.getTracks().forEach(t => t.stop());
         setPreviewStream(null);
+        setWebcamStream(null);
       };
 
-      recorder.start(1000); // Collect chunks every second
+      recorder.start(1000);
       setStatus("recording");
       startTimer();
     } catch (err: any) {
@@ -99,7 +114,7 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
       setError(err.message || "Failed to start recording");
       setStatus("idle");
     }
-  }, []);
+  }, [hasWebcam]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
