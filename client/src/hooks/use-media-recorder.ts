@@ -17,11 +17,14 @@ interface UseMediaRecorderReturn {
   hasWebcam: boolean;
   setHasWebcam: (val: boolean) => void;
   webcamStream: MediaStream | null;
+  quality: string;
+  setQuality: (val: string) => void;
 }
 
 export function useMediaRecorder(): UseMediaRecorderReturn {
   const [status, setStatus] = useState<RecorderStatus>("idle");
   const [hasWebcam, setHasWebcam] = useState(false);
+  const [quality, setQuality] = useState("1080p");
   const [mediaBlob, setMediaBlob] = useState<Blob | null>(null);
   const [mediaBlobUrl, setMediaBlobUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -60,10 +63,25 @@ export function useMediaRecorder(): UseMediaRecorderReturn {
     try {
       setError(null);
       
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: "monitor", frameRate: { ideal: 30 } },
+      const constraints: DisplayMediaStreamOptions = {
+        video: { 
+          displaySurface: "monitor", 
+        },
         audio: true,
-      });
+      };
+
+      if (quality === "720p") {
+        (constraints.video as any).width = { ideal: 1280 };
+        (constraints.video as any).height = { ideal: 720 };
+      } else if (quality === "4k") {
+        (constraints.video as any).width = { ideal: 3840 };
+        (constraints.video as any).height = { ideal: 2160 };
+      } else {
+        (constraints.video as any).width = { ideal: 1920 };
+        (constraints.video as any).height = { ideal: 1080 };
+      }
+
+      const screenStream = await navigator.mediaDevices.getDisplayMedia(constraints);
 
       let finalStream = screenStream;
 

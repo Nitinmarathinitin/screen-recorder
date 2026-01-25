@@ -10,9 +10,16 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { AudioVisualizer } from "@/components/recorder/AudioVisualizer";
 import { WebcamPreview } from "@/components/recorder/WebcamPreview";
-import { Loader2, Mic, Monitor, StopCircle, RefreshCw, Save, X, Camera } from "lucide-react";
+import { Loader2, Mic, Monitor, StopCircle, RefreshCw, Save, X, Camera, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Home() {
   const {
@@ -28,6 +35,8 @@ export default function Home() {
     duration,
     hasWebcam,
     setHasWebcam,
+    quality,
+    setQuality,
   } = useMediaRecorder();
 
   const { toast } = useToast();
@@ -71,6 +80,7 @@ export default function Home() {
         title: finalTitle,
         duration: duration,
         hasWebcam: hasWebcam,
+        quality: quality,
       });
       
       toast({
@@ -117,16 +127,32 @@ export default function Home() {
               Start Recording
             </h1>
 
-            <div className="flex items-center justify-center gap-8 mb-8 p-4 bg-white/5 rounded-2xl border border-white/10">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="webcam-mode" 
-                  checked={hasWebcam} 
-                  onCheckedChange={setHasWebcam} 
-                />
-                <Label htmlFor="webcam-mode" className="flex items-center gap-2 cursor-pointer">
-                  <Camera className="size-4" /> Webcam Overlay
-                </Label>
+            <div className="flex flex-col gap-4 mb-8 p-6 bg-white/5 rounded-2xl border border-white/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="webcam-mode" 
+                    checked={hasWebcam} 
+                    onCheckedChange={setHasWebcam} 
+                  />
+                  <Label htmlFor="webcam-mode" className="flex items-center gap-2 cursor-pointer">
+                    <Camera className="size-4" /> Webcam Overlay
+                  </Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Settings className="size-4 text-muted-foreground" />
+                  <Select value={quality} onValueChange={setQuality}>
+                    <SelectTrigger className="w-[120px] h-8 bg-transparent border-white/10">
+                      <SelectValue placeholder="Quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="720p">720p (HD)</SelectItem>
+                      <SelectItem value="1080p">1080p (FHD)</SelectItem>
+                      <SelectItem value="4k">4K (UHD)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
