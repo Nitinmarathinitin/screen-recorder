@@ -15,13 +15,19 @@ export function AudioVisualizer({ stream, isRecording }: AudioVisualizerProps) {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
       return;
     }
+    let analyser;
 
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const source = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-    analyserRef.current = analyser;
+    if (stream.getAudioTracks().length>0){
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+
+    }
+
+    if (!analyser) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
